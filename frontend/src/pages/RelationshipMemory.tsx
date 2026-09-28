@@ -50,25 +50,40 @@ export default function RelationshipMemory() {
   const resolved = commitments.filter((c) => c.status === "resolved");
 
   return (
-    <div style={{ maxWidth: 760 }}>
+    <div style={{ maxWidth: 1200, margin: "0 auto" }}>
       {/* Header */}
-      <div style={{ marginBottom: 32 }}>
-        <h1 className="page-title">Relationship Memory</h1>
-        <p className="page-subtitle">
-          Everything the agent has retained for a contact — promises made, concerns raised, preferences noted, decisions taken.
-        </p>
+      <div style={{ marginBottom: 28, display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 16 }}>
+        <div>
+          <h1 className="page-title">Relationship Memory Bank</h1>
+          <p className="page-subtitle">
+            Hindsight long-term memory for every contact — promises made, concerns raised, preferences noted, and decisions taken across calls.
+          </p>
+        </div>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <span style={{ fontSize: 12, color: "#64748b" }}>Quick Demo:</span>
+          <button
+            type="button"
+            className="btn-ghost"
+            style={{ fontSize: 12, padding: "5px 12px", background: "rgba(99,102,241,0.1)", borderColor: "rgba(99,102,241,0.3)", color: "#a5b4fc" }}
+            onClick={() => {
+              setRelationshipId("Sarah Chen");
+            }}
+          >
+            ⚡ Sarah Chen
+          </button>
+        </div>
       </div>
 
       {/* Lookup */}
       <div className="card card-glow" style={{ marginBottom: 24 }}>
-        <div className="section-heading">Load Relationship</div>
+        <div className="section-heading">Query Relationship Memory</div>
         <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
           <input
             className="field"
             value={relationshipId}
             onChange={(e) => setRelationshipId(e.target.value)}
             onKeyDown={handleKey}
-            placeholder="Paste relationship ID (from Capture Meeting)…"
+            placeholder="Enter Contact Name or Relationship ID (e.g. Sarah Chen)…"
             id="relationship-id-input"
           />
           <button onClick={load} disabled={busy || !relationshipId.trim()} className="btn-primary">
@@ -77,7 +92,7 @@ export default function RelationshipMemory() {
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
               </svg>
             )}
-            Load Memory
+            Recall Memory
           </button>
         </div>
         {error && <div className="error-banner fade-up" style={{ marginTop: 12 }}>{error}</div>}

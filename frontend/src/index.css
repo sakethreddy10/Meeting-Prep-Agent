@@ -253,4 +253,22 @@
   .orb-1 { width: 600px; height: 600px; background: #6366f1; top: -150px; left: -150px; }
   .orb-2 { width: 500px; height: 500px; background: #a855f7; bottom: -100px; right: -100px; }
   .orb-3 { width: 350px; height: 350px; background: #0891b2; top: 40%; right: 10%; }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.35; transform: scale(0.85); }
+  }
+  .pulse-dot { animation: pulse-dot 1.4s ease-in-out infinite; }
+
+  @keyframes wave {
+    0%, 100% { height: 6px; }
+    50% { height: 26px; }
+  }
+  .wave-bar {
+    width: 3px;
+    background: linear-gradient(180deg, #818cf8, #c084fc);
+    border-radius: 99px;
+    animation: wave 1.2s ease-in-out infinite;
+  }
 }
+

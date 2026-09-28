@@ -13,7 +13,7 @@ from models.analysis import AnalysisResult
 from models.meeting import Transcript
 from services import memory_pipeline
 from services.commitment_matching import is_resolved as commitment_is_resolved
-from services.relationship_service import get_by_id
+from services.relationship_service import get_by_id, get_by_name
 
 router = APIRouter(tags=["memory"])
 
@@ -93,7 +93,7 @@ def get_relationship_memory(
     status: str | None = Query(default=None),
     hindsight: HindsightAdapter = Depends(get_hindsight_adapter),
 ) -> list[dict]:
-    relationship = get_by_id(relationship_id)
+    relationship = get_by_id(relationship_id) or get_by_name(relationship_id)
     if relationship is None:
         raise HTTPException(status_code=404, detail="Relationship not found")
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { api, ApiError, type Answer, type PreparationBrief } from "../services/apiClient";
 
 function isBrief(x: PreparationBrief | Answer): x is PreparationBrief {
@@ -49,6 +49,19 @@ export default function MeetingPreparation() {
   const [memoryResult, setMemoryResult] = useState<PreparationBrief | Answer | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [recentMeetings, setRecentMeetings] = useState<Array<{ id: string; relationshipName: string; title: string }>>([]);
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("recent_meetings") || "[]");
+      setRecentMeetings(stored);
+      if (stored.length > 0 && !meetingId) {
+        setMeetingId(stored[0].id);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   async function handlePrepare() {
     if (!meetingId.trim()) return;
@@ -164,9 +177,9 @@ export default function MeetingPreparation() {
   }
 
   return (
-    <div>
+    <div style={{ maxWidth: 1200, margin: "0 auto" }}>
       {/* Header */}
-      <div style={{ marginBottom: 32 }}>
+      <div style={{ marginBottom: 28 }}>
         <h1 className="page-title">Prepare Brief</h1>
         <p className="page-subtitle">
           Generate a side-by-side comparison: stateless AI vs. memory-enabled AI. See exactly what the agent remembers about this contact.
@@ -175,9 +188,33 @@ export default function MeetingPreparation() {
 
       {/* Input card */}
       <div className="card card-glow" style={{ marginBottom: 24 }}>
-        <div className="section-heading">Brief Request</div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <div className="section-heading" style={{ margin: 0 }}>Brief Request</div>
+          {recentMeetings.length > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 11, color: "#64748b" }}>Recent Meetings:</span>
+              {recentMeetings.slice(0, 3).map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => setMeetingId(m.id)}
+                  className="btn-ghost"
+                  style={{
+                    fontSize: 11,
+                    padding: "3px 8px",
+                    background: meetingId === m.id ? "rgba(99,102,241,0.2)" : "rgba(255,255,255,0.04)",
+                    color: meetingId === m.id ? "#a5b4fc" : "#94a3b8",
+                    borderColor: meetingId === m.id ? "rgba(99,102,241,0.4)" : "rgba(255,255,255,0.08)",
+                  }}
+                >
+                  ⚡ {m.relationshipName}: {m.title.slice(0, 20)}…
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginTop: 8, marginBottom: 14 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 16 }}>
           <div>
             <label style={{ fontSize: 12, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 6 }}>
               Meeting ID
@@ -187,7 +224,7 @@ export default function MeetingPreparation() {
               value={meetingId}
               onChange={(e) => setMeetingId(e.target.value)}
               onKeyDown={handleKey}
-              placeholder="From Capture Meeting…"
+              placeholder="e.g. paste meeting ID from Capture"
               id="prep-meeting-id-input"
             />
           </div>
@@ -200,7 +237,7 @@ export default function MeetingPreparation() {
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               onKeyDown={handleKey}
-              placeholder="e.g. What did I promise last time?"
+              placeholder="e.g. What did I promise regarding performance?"
               id="prep-question-input"
             />
           </div>
@@ -215,14 +252,14 @@ export default function MeetingPreparation() {
           {busy ? (
             <>
               <span className="spinner" />
-              Generating briefs…
+              Generating briefs with Hindsight…
             </>
           ) : (
             <>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
               </svg>
-              Generate Preparation Brief
+              Generate Side-by-Side Preparation Brief
             </>
           )}
         </button>

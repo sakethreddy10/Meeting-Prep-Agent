@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { api, ApiError, type Meeting } from "../services/apiClient";
 
 export default function UpcomingMeetings() {
@@ -6,6 +7,17 @@ export default function UpcomingMeetings() {
   const [meeting, setMeeting] = useState<Meeting | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [recentMeetings, setRecentMeetings] = useState<Array<{ id: string; relationshipName: string; title: string; date: string }>>([]);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("recent_meetings") || "[]");
+      setRecentMeetings(stored);
+    } catch {
+      // ignore
+    }
+  }, []);
 
   async function lookup() {
     if (!meetingId.trim()) return;
@@ -26,21 +38,31 @@ export default function UpcomingMeetings() {
   }
 
   return (
-    <div style={{ maxWidth: 760 }}>
+    <div style={{ maxWidth: 1200, margin: "0 auto" }}>
       {/* Page header */}
-      <div style={{ marginBottom: 32 }}>
-        <h1 className="page-title">Dashboard</h1>
-        <p className="page-subtitle">
-          Your professional memory layer — every promise, preference, and decision remembered across meetings.
-        </p>
+      <div style={{ marginBottom: 28, display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 16 }}>
+        <div>
+          <h1 className="page-title">Meeting Continuity Dashboard</h1>
+          <p className="page-subtitle">
+            Never forget a promise, decision, or preference. Powered by Hindsight long-term memory across meetings.
+          </p>
+        </div>
+        <button
+          onClick={() => navigate("/capture")}
+          className="btn-primary"
+          style={{ fontSize: 13, padding: "8px 16px" }}
+        >
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#ef4444" }} className="pulse-dot" />
+          Join / Ingest Meeting
+        </button>
       </div>
 
       {/* Hero stat cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 32 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 28 }}>
         {[
-          { icon: "🧠", label: "Memory-Powered", value: "Every meeting", desc: "Context retained automatically" },
-          { icon: "📋", label: "Promise Tracker", value: "Zero missed", desc: "Commitments tracked & resolved" },
-          { icon: "⚡", label: "Instant Brief", value: "Before any call", desc: "Full context in seconds" },
+          { icon: "🧠", label: "Hindsight Memory Layer", value: "Every Contact", desc: "Retains durable decisions & preferences" },
+          { icon: "🤝", label: "Promise Tracker", value: "Zero Missed", desc: "Monitors commitments and resolution" },
+          { icon: "⚡", label: "Grounded Briefings", value: "Source Attributed", desc: "Prepares you with exact past context" },
         ].map((stat) => (
           <div key={stat.label} className="card" style={{ textAlign: "center", padding: "20px 16px" }}>
             <div style={{ fontSize: 28, marginBottom: 8 }}>{stat.icon}</div>
@@ -50,6 +72,64 @@ export default function UpcomingMeetings() {
           </div>
         ))}
       </div>
+
+      {/* Recent / Scheduled Meetings List */}
+      {recentMeetings.length > 0 && (
+        <div className="card card-glow" style={{ marginBottom: 24 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <div className="section-heading" style={{ margin: 0 }}>Recent Ingested Meetings</div>
+            <span style={{ fontSize: 12, color: "#a5b4fc" }}>Ready for preparation</span>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {recentMeetings.map((m) => (
+              <div
+                key={m.id}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                  borderRadius: 10,
+                  padding: "12px 16px",
+                  gap: 12,
+                  flexWrap: "wrap",
+                }}
+              >
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span className="badge badge-purple">{m.relationshipName}</span>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: "#f1f5f9" }}>{m.title}</span>
+                  </div>
+                  <div style={{ fontSize: 11, color: "#64748b", marginTop: 4 }}>
+                    ID: <code className="mono">{m.id}</code>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    onClick={() => {
+                      setMeetingId(m.id);
+                      lookup();
+                    }}
+                    className="btn-ghost"
+                    style={{ fontSize: 12, padding: "5px 10px" }}
+                  >
+                    View Status
+                  </button>
+                  <button
+                    onClick={() => navigate("/prepare")}
+                    className="btn-primary"
+                    style={{ fontSize: 12, padding: "5px 12px" }}
+                  >
+                    ⚡ Prepare Brief
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Lookup card */}
       <div className="card card-glow glow-animate" style={{ marginBottom: 20 }}>
