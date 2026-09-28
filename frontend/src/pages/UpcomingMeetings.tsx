@@ -42,7 +42,7 @@ export default function UpcomingMeetings() {
       {/* Page header */}
       <div style={{ marginBottom: 28, display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 16 }}>
         <div>
-          <h1 className="page-title">Meeting Continuity Dashboard</h1>
+          <h1 className="page-title">Meeting Prep Agent</h1>
           <p className="page-subtitle">
             Never forget a promise, decision, or preference. Powered by Hindsight long-term memory across meetings.
           </p>

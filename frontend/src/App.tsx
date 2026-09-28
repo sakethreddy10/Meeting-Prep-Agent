@@ -83,8 +83,8 @@ export default function App() {
               flexShrink: 0,
             }}>M</div>
             <div>
-              <div style={{ fontWeight: 700, fontSize: 14, color: "#f1f5f9", lineHeight: 1.2 }}>MeetPrep</div>
-              <div style={{ fontSize: 11, color: "#475569", marginTop: 1 }}>AI Memory Agent</div>
+              <div style={{ fontWeight: 700, fontSize: 14, color: "#f1f5f9", lineHeight: 1.2 }}>Meeting Prep Agent</div>
+              <div style={{ fontSize: 11, color: "#475569", marginTop: 1 }}>AI Continuity & Memory</div>
             </div>
           </div>
 
