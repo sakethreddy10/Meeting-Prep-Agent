@@ -1,0 +1,34 @@
+# Secrets — never commit real environment files
+.env
+.env.*
+!*.env.example
+backend/.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+backend/data/
+
+# Node / frontend
+node_modules/
+dist/
+frontend/dist/
+*.tsbuildinfo
+*.log
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
+
+# Local AI-tool skill caches (not part of the application)
+.agents/
+.aider-desk/
+.claude/
+skills-lock.json
