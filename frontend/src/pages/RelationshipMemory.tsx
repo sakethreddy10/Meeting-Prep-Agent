@@ -1,19 +1,23 @@
 import { useState } from "react";
 import { api, ApiError, type MemoryTimelineItem } from "../services/apiClient";
-import { badge, card, errorBanner, input, primaryButton, sectionHeading } from "../styles";
 
-const CATEGORY_LABEL: Record<string, string> = {
-  decision: "Decision",
-  commitment: "Commitment",
-  concern: "Concern",
-  requirement: "Requirement",
-  preference: "Preference",
-  unresolved_question: "Unresolved question",
-  follow_up: "Follow-up",
-  context: "Context",
-  priority_change: "Priority change",
-  outcome: "Outcome",
+const CATEGORY_META: Record<string, { label: string; badge: string; icon: string }> = {
+  decision:           { label: "Decision",           badge: "badge-purple", icon: "⚖️" },
+  commitment:         { label: "Commitment",         badge: "badge-amber",  icon: "🤝" },
+  concern:            { label: "Concern",            badge: "badge-red",    icon: "⚠️" },
+  requirement:        { label: "Requirement",        badge: "badge-green",  icon: "📌" },
+  preference:         { label: "Preference",         badge: "badge-cyan",   icon: "💡" },
+  unresolved_question:{ label: "Unresolved",         badge: "badge-red",    icon: "❓" },
+  follow_up:          { label: "Follow-up",          badge: "badge-slate",  icon: "📎" },
+  context:            { label: "Context",            badge: "badge-slate",  icon: "📝" },
+  priority_change:    { label: "Priority Change",    badge: "badge-amber",  icon: "🔄" },
+  outcome:            { label: "Outcome",            badge: "badge-green",  icon: "✅" },
 };
+
+function fmt(date: string | null | undefined) {
+  if (!date) return "";
+  return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
 
 export default function RelationshipMemory() {
   const [relationshipId, setRelationshipId] = useState("");
@@ -22,10 +26,11 @@ export default function RelationshipMemory() {
   const [busy, setBusy] = useState(false);
 
   async function load() {
+    if (!relationshipId.trim()) return;
     setError(null);
     setBusy(true);
     try {
-      const result = await api.getRelationshipMemory(relationshipId);
+      const result = await api.getRelationshipMemory(relationshipId.trim());
       setItems(result);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong.");
@@ -34,85 +39,160 @@ export default function RelationshipMemory() {
     }
   }
 
+  function handleKey(e: React.KeyboardEvent) {
+    if (e.key === "Enter") load();
+  }
+
   const commitments = items?.filter((i) => i.category === "commitment") ?? [];
   const others = items?.filter((i) => i.category !== "commitment") ?? [];
 
+  const outstanding = commitments.filter((c) => c.status !== "resolved");
+  const resolved = commitments.filter((c) => c.status === "resolved");
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="bg-gradient-to-r from-indigo-700 to-fuchsia-700 bg-clip-text text-2xl font-bold text-transparent">
-          Relationship Memory
-        </h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Everything Hindsight has retained for a relationship, with the Promise Tracker surfaced up
-          top.
+    <div style={{ maxWidth: 760 }}>
+      {/* Header */}
+      <div style={{ marginBottom: 32 }}>
+        <h1 className="page-title">Relationship Memory</h1>
+        <p className="page-subtitle">
+          Everything the agent has retained for a contact — promises made, concerns raised, preferences noted, decisions taken.
         </p>
       </div>
 
-      <div className={`${card} flex gap-2`}>
-        <input
-          className={input}
-          value={relationshipId}
-          onChange={(e) => setRelationshipId(e.target.value)}
-          placeholder="relationship_id (from Meeting Capture)"
-        />
-        <button onClick={load} disabled={busy || !relationshipId} className={primaryButton}>
-          Load
-        </button>
+      {/* Lookup */}
+      <div className="card card-glow" style={{ marginBottom: 24 }}>
+        <div className="section-heading">Load Relationship</div>
+        <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+          <input
+            className="field"
+            value={relationshipId}
+            onChange={(e) => setRelationshipId(e.target.value)}
+            onKeyDown={handleKey}
+            placeholder="Paste relationship ID (from Capture Meeting)…"
+            id="relationship-id-input"
+          />
+          <button onClick={load} disabled={busy || !relationshipId.trim()} className="btn-primary">
+            {busy ? <span className="spinner" /> : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+            )}
+            Load Memory
+          </button>
+        </div>
+        {error && <div className="error-banner fade-up" style={{ marginTop: 12 }}>{error}</div>}
       </div>
 
-      {error && <p className={errorBanner}>{error}</p>}
-
       {items && (
-        <>
+        <div className="fade-up">
+          {/* Summary row */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
+            {[
+              { label: "Total Memories", value: items.length, badge: "badge-purple", icon: "🧠" },
+              { label: "Outstanding Commitments", value: outstanding.length, badge: "badge-amber", icon: "⏳" },
+              { label: "Resolved Commitments", value: resolved.length, badge: "badge-green", icon: "✅" },
+            ].map((s) => (
+              <div key={s.label} className="card" style={{ textAlign: "center", padding: "16px 12px" }}>
+                <div style={{ fontSize: 22, marginBottom: 6 }}>{s.icon}</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: "#f1f5f9" }}>{s.value}</div>
+                <div style={{ fontSize: 11, color: "#475569", marginTop: 4 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Promise Tracker */}
           {commitments.length > 0 && (
-            <div className={card}>
-              <h2 className={sectionHeading}>Promise Tracker</h2>
-              <ul className="mt-3 space-y-2">
-                {commitments.map((item) => (
-                  <li
-                    key={item.id}
-                    className="rounded-xl border border-indigo-100 bg-gradient-to-r from-white to-indigo-50/60 p-3 text-sm"
-                  >
-                    <span className={`mr-2 ${badge(item.status === "resolved" ? "green" : "amber")}`}>
-                      {item.status ?? "unknown"}
-                    </span>
-                    {item.text}
-                    <p className="mt-1 text-xs text-slate-400">
-                      from "{item.source_meeting_title}" on{" "}
-                      {item.occurred_at && new Date(item.occurred_at).toLocaleDateString()}
-                    </p>
-                  </li>
-                ))}
-              </ul>
+            <div className="card" style={{ marginBottom: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                <span style={{ fontSize: 18 }}>🤝</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0" }}>Promise Tracker</span>
+                <span className="badge badge-amber" style={{ marginLeft: "auto" }}>{outstanding.length} outstanding</span>
+              </div>
+
+              {outstanding.length > 0 && (
+                <div style={{ marginBottom: 12 }}>
+                  <div className="section-heading" style={{ marginBottom: 8 }}>Outstanding</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {outstanding.map((item) => (
+                      <div key={item.id} className="memory-item" style={{ borderLeft: "3px solid rgba(251,191,36,0.4)" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "flex-start" }}>
+                          <div style={{ fontSize: 13, color: "#e2e8f0", lineHeight: 1.5, flex: 1 }}>{item.text}</div>
+                          <span className="badge badge-amber">outstanding</span>
+                        </div>
+                        <div style={{ fontSize: 12, color: "#475569", marginTop: 6 }}>
+                          from <em style={{ color: "#64748b" }}>"{item.source_meeting_title}"</em>
+                          {item.occurred_at && <> · {fmt(item.occurred_at)}</>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {resolved.length > 0 && (
+                <div>
+                  <div className="section-heading" style={{ marginBottom: 8 }}>Resolved</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {resolved.map((item) => (
+                      <div key={item.id} className="memory-item" style={{ borderLeft: "3px solid rgba(52,211,153,0.4)", opacity: 0.75 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "flex-start" }}>
+                          <div style={{ fontSize: 13, color: "#94a3b8", lineHeight: 1.5, flex: 1, textDecoration: "line-through" }}>{item.text}</div>
+                          <span className="badge badge-green">resolved</span>
+                        </div>
+                        <div style={{ fontSize: 12, color: "#334155", marginTop: 6 }}>
+                          from "{item.source_meeting_title}"
+                          {item.occurred_at && <> · {fmt(item.occurred_at)}</>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
-          <div className={card}>
-            <h2 className={sectionHeading}>Memory Timeline</h2>
-            <ul className="mt-3 space-y-2">
-              {others.map((item) => (
-                <li
-                  key={item.id}
-                  className="rounded-xl border border-indigo-100 bg-gradient-to-r from-white to-indigo-50/60 p-3 text-sm"
-                >
-                  <span className={`mr-2 ${badge("indigo")}`}>
-                    {CATEGORY_LABEL[item.category] ?? item.category}
-                  </span>
-                  {item.text}
-                  <p className="mt-1 text-xs text-slate-400">
-                    from "{item.source_meeting_title}" on{" "}
-                    {item.occurred_at && new Date(item.occurred_at).toLocaleDateString()}
-                  </p>
-                </li>
-              ))}
-              {others.length === 0 && commitments.length === 0 && (
-                <p className="text-slate-500">No memory retained yet for this relationship.</p>
-              )}
-            </ul>
-          </div>
-        </>
+          {/* Memory Timeline */}
+          {others.length > 0 ? (
+            <div className="card">
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                <span style={{ fontSize: 18 }}>📜</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0" }}>Memory Timeline</span>
+                <span className="badge badge-purple" style={{ marginLeft: "auto" }}>{others.length} items</span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {others.map((item) => {
+                  const meta = CATEGORY_META[item.category] ?? { label: item.category, badge: "badge-slate", icon: "📝" };
+                  return (
+                    <div key={item.id} className="memory-item" style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                      <div style={{ fontSize: 18, marginTop: 1, flexShrink: 0 }}>{meta.icon}</div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
+                          <span className={`badge ${meta.badge}`}>{meta.label}</span>
+                          <div style={{ fontSize: 13, color: "#e2e8f0", lineHeight: 1.5, flex: 1 }}>{item.text}</div>
+                        </div>
+                        <div style={{ fontSize: 12, color: "#475569" }}>
+                          from <em style={{ color: "#64748b" }}>"{item.source_meeting_title}"</em>
+                          {item.occurred_at && <> · {fmt(item.occurred_at)}</>}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : commitments.length === 0 && (
+            <div className="card" style={{ textAlign: "center", padding: 48 }}>
+              <div style={{ fontSize: 36, marginBottom: 12 }}>🤔</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: "#475569" }}>No memories retained yet</div>
+              <div style={{ fontSize: 13, color: "#334155", marginTop: 6 }}>
+                Capture a meeting with this contact first.
+              </div>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
 }
+
+
