@@ -14,17 +14,29 @@ const NAV = [
 export default function App() {
   return (
     <HashRouter>
-      <div className="min-h-screen bg-slate-50 text-slate-900">
-        <header className="border-b border-slate-200 bg-white">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-fuchsia-50 text-slate-900">
+        <header className="sticky top-0 z-10 border-b border-white/60 bg-white/70 backdrop-blur-md">
           <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-            <h1 className="text-lg font-semibold">Meeting Continuity Agent</h1>
-            <nav className="flex gap-4 text-sm">
+            <h1 className="flex items-center gap-2 text-lg font-bold">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 text-sm text-white shadow-sm shadow-indigo-300">
+                M
+              </span>
+              <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
+                Meeting Continuity Agent
+              </span>
+            </h1>
+            <nav className="flex gap-1 text-sm">
               {NAV.map((item) => (
                 <NavLink
                   key={item.to}
                   to={item.to}
+                  end={item.to === "/"}
                   className={({ isActive }) =>
-                    isActive ? "font-semibold text-indigo-600" : "text-slate-600 hover:text-slate-900"
+                    `rounded-full px-3 py-1.5 font-medium transition-colors ${
+                      isActive
+                        ? "bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white shadow-sm shadow-indigo-300"
+                        : "text-slate-600 hover:bg-slate-900/5 hover:text-slate-900"
+                    }`
                   }
                 >
                   {item.label}

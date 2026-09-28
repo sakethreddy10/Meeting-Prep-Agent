@@ -1,11 +1,18 @@
 import { useState } from "react";
 import { api, ApiError, type Answer, type PreparationBrief } from "../services/apiClient";
+import { badge, card, errorBanner, input, label, primaryButton, sectionHeading } from "../styles";
 
 function isBrief(x: PreparationBrief | Answer): x is PreparationBrief {
   return (x as PreparationBrief).confirmed !== undefined;
 }
 
-function ClaimList({ title, claims }: { title: string; claims: { text: string; source_meeting_title: string | null }[] }) {
+function ClaimList({
+  title,
+  claims,
+}: {
+  title: string;
+  claims: { text: string; source_meeting_title: string | null }[];
+}) {
   if (claims.length === 0) return null;
   return (
     <div>
@@ -49,24 +56,25 @@ export default function MeetingPreparation() {
     }
   }
 
-  function renderResult(result: PreparationBrief | Answer, label: string) {
+  function renderResult(result: PreparationBrief | Answer, kind: "stateless" | "memory") {
+    const isMemory = kind === "memory";
     return (
-      <div className="rounded-lg border border-slate-200 bg-white p-6">
+      <div
+        className={`${card} ${isMemory ? "ring-2 ring-indigo-300/60" : ""}`}
+      >
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-base font-semibold">{label}</h2>
-          <span
-            className={`rounded px-2 py-0.5 text-xs font-medium ${
-              label === "Stateless" ? "bg-slate-200 text-slate-700" : "bg-indigo-100 text-indigo-700"
-            }`}
-          >
-            {label === "Stateless" ? "no memory used" : "Hindsight memory used"}
+          <h2 className={sectionHeading}>{isMemory ? "Memory-enabled" : "Stateless"}</h2>
+          <span className={badge(isMemory ? "indigo" : "slate")}>
+            {isMemory ? "Hindsight memory used" : "no memory used"}
           </span>
         </div>
 
         {isBrief(result) ? (
           <div className="space-y-3">
             {result.relationship_summary && (
-              <p className="text-sm italic text-slate-600">{result.relationship_summary}</p>
+              <p className="rounded-lg bg-gradient-to-r from-indigo-50 to-fuchsia-50 p-3 text-sm italic text-slate-600">
+                {result.relationship_summary}
+              </p>
             )}
             <ClaimList title="What matters" claims={result.confirmed.what_matters} />
             <ClaimList title="Previous concerns" claims={result.confirmed.previous_concerns} />
@@ -81,7 +89,10 @@ export default function MeetingPreparation() {
             {result.suggested.talking_points.length > 0 && (
               <div>
                 <h3 className="text-sm font-semibold text-slate-700">
-                  Suggested talking points <span className="text-xs font-normal text-slate-400">(agent inference, not history)</span>
+                  Suggested talking points{" "}
+                  <span className="text-xs font-normal text-slate-400">
+                    (agent inference, not history)
+                  </span>
                 </h3>
                 <ul className="mt-1 list-disc pl-5 text-sm text-slate-600">
                   {result.suggested.talking_points.map((p, i) => (
@@ -91,7 +102,7 @@ export default function MeetingPreparation() {
               </div>
             )}
             {result.conflicts.length > 0 && (
-              <div className="rounded border border-amber-200 bg-amber-50 p-3">
+              <div className="rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-3">
                 <h3 className="text-sm font-semibold text-amber-800">Conflicting information</h3>
                 {result.conflicts.map((c, i) => (
                   <p key={i} className="mt-1 text-sm text-amber-700">
@@ -104,11 +115,7 @@ export default function MeetingPreparation() {
         ) : (
           <div>
             <p className="text-sm text-slate-700">{result.text}</p>
-            <span
-              className={`mt-2 inline-block rounded px-2 py-0.5 text-xs font-medium ${
-                result.grounded ? "bg-green-100 text-green-700" : "bg-slate-200 text-slate-600"
-              }`}
-            >
+            <span className={`mt-2 inline-block ${badge(result.grounded ? "green" : "slate")}`}>
               {result.grounded ? "grounded in memory" : "not enough information"}
             </span>
           </div>
@@ -119,40 +126,53 @@ export default function MeetingPreparation() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-3 rounded-lg border border-slate-200 bg-white p-6">
+      <div>
+        <h1 className="bg-gradient-to-r from-indigo-700 to-fuchsia-700 bg-clip-text text-2xl font-bold text-transparent">
+          Meeting Preparation
+        </h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Generate a stateless response and a Hindsight memory-enabled response side by side, for the
+          same request.
+        </p>
+      </div>
+
+      <div className={`${card} space-y-3`}>
         <div>
-          <label className="block text-sm font-medium">Meeting ID</label>
+          <label className={label}>Meeting ID</label>
           <input
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+            className={`mt-1 ${input}`}
             value={meetingId}
             onChange={(e) => setMeetingId(e.target.value)}
             placeholder="meeting_id (from Meeting Capture)"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium">
-            Optional question <span className="text-xs font-normal text-slate-400">(e.g. "What did I promise last time?")</span>
+          <label className={label}>
+            Optional question{" "}
+            <span className="text-xs font-normal text-slate-400">
+              (e.g. "What did I promise last time?")
+            </span>
           </label>
           <input
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+            className={`mt-1 ${input}`}
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             placeholder="Leave blank for a full preparation brief"
           />
         </div>
-        <button
-          onClick={handlePrepare}
-          disabled={busy || !meetingId}
-          className="rounded bg-indigo-600 px-4 py-2 text-white disabled:opacity-50"
-        >
+        <button onClick={handlePrepare} disabled={busy || !meetingId} className={primaryButton}>
           {busy ? "Preparing..." : "Prepare (stateless vs. memory-enabled)"}
         </button>
       </div>
 
-      {error && <p className="rounded bg-red-50 p-3 text-red-700">{error}</p>}
+      {error && <p className={errorBanner}>{error}</p>}
 
-      {statelessResult && renderResult(statelessResult, "Stateless")}
-      {memoryResult && renderResult(memoryResult, "Memory-enabled")}
+      {(statelessResult || memoryResult) && (
+        <div className="grid gap-6 md:grid-cols-2">
+          {statelessResult && renderResult(statelessResult, "stateless")}
+          {memoryResult && renderResult(memoryResult, "memory")}
+        </div>
+      )}
     </div>
   );
 }

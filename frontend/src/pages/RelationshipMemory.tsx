@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { api, ApiError, type MemoryTimelineItem } from "../services/apiClient";
+import { badge, card, errorBanner, input, primaryButton, sectionHeading } from "../styles";
 
 const CATEGORY_LABEL: Record<string, string> = {
   decision: "Decision",
@@ -38,39 +39,42 @@ export default function RelationshipMemory() {
 
   return (
     <div className="space-y-6">
-      <div className="flex gap-2">
+      <div>
+        <h1 className="bg-gradient-to-r from-indigo-700 to-fuchsia-700 bg-clip-text text-2xl font-bold text-transparent">
+          Relationship Memory
+        </h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Everything Hindsight has retained for a relationship, with the Promise Tracker surfaced up
+          top.
+        </p>
+      </div>
+
+      <div className={`${card} flex gap-2`}>
         <input
-          className="w-full rounded border border-slate-300 px-3 py-2"
+          className={input}
           value={relationshipId}
           onChange={(e) => setRelationshipId(e.target.value)}
           placeholder="relationship_id (from Meeting Capture)"
         />
-        <button
-          onClick={load}
-          disabled={busy || !relationshipId}
-          className="rounded bg-indigo-600 px-4 py-2 text-white disabled:opacity-50"
-        >
+        <button onClick={load} disabled={busy || !relationshipId} className={primaryButton}>
           Load
         </button>
       </div>
 
-      {error && <p className="rounded bg-red-50 p-3 text-red-700">{error}</p>}
+      {error && <p className={errorBanner}>{error}</p>}
 
       {items && (
         <>
           {commitments.length > 0 && (
-            <div className="rounded-lg border border-slate-200 bg-white p-6">
-              <h2 className="text-base font-semibold">Promise Tracker</h2>
+            <div className={card}>
+              <h2 className={sectionHeading}>Promise Tracker</h2>
               <ul className="mt-3 space-y-2">
                 {commitments.map((item) => (
-                  <li key={item.id} className="rounded border border-slate-100 bg-slate-50 p-3 text-sm">
-                    <span
-                      className={`mr-2 rounded px-2 py-0.5 text-xs font-medium ${
-                        item.status === "resolved"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-amber-100 text-amber-700"
-                      }`}
-                    >
+                  <li
+                    key={item.id}
+                    className="rounded-xl border border-indigo-100 bg-gradient-to-r from-white to-indigo-50/60 p-3 text-sm"
+                  >
+                    <span className={`mr-2 ${badge(item.status === "resolved" ? "green" : "amber")}`}>
                       {item.status ?? "unknown"}
                     </span>
                     {item.text}
@@ -84,12 +88,15 @@ export default function RelationshipMemory() {
             </div>
           )}
 
-          <div className="rounded-lg border border-slate-200 bg-white p-6">
-            <h2 className="text-base font-semibold">Memory Timeline</h2>
+          <div className={card}>
+            <h2 className={sectionHeading}>Memory Timeline</h2>
             <ul className="mt-3 space-y-2">
               {others.map((item) => (
-                <li key={item.id} className="rounded border border-slate-100 bg-slate-50 p-3 text-sm">
-                  <span className="mr-2 rounded bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700">
+                <li
+                  key={item.id}
+                  className="rounded-xl border border-indigo-100 bg-gradient-to-r from-white to-indigo-50/60 p-3 text-sm"
+                >
+                  <span className={`mr-2 ${badge("indigo")}`}>
                     {CATEGORY_LABEL[item.category] ?? item.category}
                   </span>
                   {item.text}

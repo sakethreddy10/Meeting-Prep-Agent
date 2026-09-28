@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { api, ApiError, type Meeting } from "../services/apiClient";
+import { badge, card, errorBanner, input, primaryButton, sectionHeading } from "../styles";
 
 export default function UpcomingMeetings() {
   const [meetingId, setMeetingId] = useState("");
@@ -18,31 +19,41 @@ export default function UpcomingMeetings() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-lg border border-slate-200 bg-white p-6">
-        <p className="text-sm text-slate-500">
-          Calendar-sourced upcoming meetings are an optional enhancement (Phase 8, not built in this
-          MVP core). For now, look up a meeting you already captured to jump straight to
-          preparation.
+      <div>
+        <h1 className="bg-gradient-to-r from-indigo-700 to-fuchsia-700 bg-clip-text text-2xl font-bold text-transparent">
+          Upcoming Meetings
+        </h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Jump straight into preparation for a meeting you've already captured.
         </p>
+      </div>
+
+      <div className={card}>
+        <h2 className={sectionHeading}>Find a meeting</h2>
         <div className="mt-3 flex gap-2">
           <input
-            className="w-full rounded border border-slate-300 px-3 py-2"
+            className={input}
             value={meetingId}
             onChange={(e) => setMeetingId(e.target.value)}
             placeholder="meeting_id (from Meeting Capture)"
           />
-          <button onClick={lookup} className="rounded bg-indigo-600 px-4 py-2 text-white">
+          <button onClick={lookup} className={primaryButton}>
             Look up
           </button>
         </div>
-        {error && <p className="mt-3 rounded bg-red-50 p-3 text-red-700">{error}</p>}
+        {error && <p className={`mt-3 ${errorBanner}`}>{error}</p>}
         {meeting && (
-          <div className="mt-4 rounded border border-slate-100 bg-slate-50 p-4 text-sm">
+          <div className="mt-4 rounded-xl border border-indigo-100 bg-gradient-to-r from-white to-indigo-50/60 p-4 text-sm">
             <p className="font-semibold">{meeting.title}</p>
-            <p className="text-slate-500">
-              {new Date(meeting.occurred_at).toLocaleString()} · transcript:{" "}
-              {meeting.transcript_status} · analysis: {meeting.analysis_status}
-            </p>
+            <p className="mt-1 text-slate-500">{new Date(meeting.occurred_at).toLocaleString()}</p>
+            <div className="mt-2 flex gap-2">
+              <span className={badge(meeting.transcript_status === "available" ? "green" : "amber")}>
+                transcript: {meeting.transcript_status}
+              </span>
+              <span className={badge(meeting.analysis_status === "completed" ? "green" : "amber")}>
+                analysis: {meeting.analysis_status}
+              </span>
+            </div>
             <p className="mt-2 text-xs text-slate-400">relationship_id: {meeting.relationship_id}</p>
           </div>
         )}
